@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>時計</title>
+<script src="./js/index.js" defer></script>
+<link rel="stylesheet" href="./css/index.css">
+</head>
+<body>
+<header>
+<h1>時計</h1>
+</header>
+<main>
+<form>
+<fieldset>
+<legend>短針の設定をしよう！</legend>
+<div>
+<label for="hour_m">重さ</label>
+<input type="number" id="hour_m" min="0">
+</div>
+<div>
+<label for="hour_l">長さ</label>
+<input type="number" id="hour_l" min="0">
+</div>
+</fieldset>
+<fieldset>
+<legend>長針の設定をしよう！</legend>
+<div>
+<label for="min_m">重さ</label>
+<input type="number" id="min_m" min="0">
+</div>
+<div>
+<label for="min_l">長さ</label>
+<input type="number" id="min_l" min="0">
+</div>
+</fieldset>
+<fieldset>
+<legend>秒針の設定をしよう！</legend>
+<div>
+<label for="sec_m">重さ</label>
+<input type="number" id="sec_m" min="0">
+</div>
+<div>
+<label for="sec_l">長さ</label>
+<input type="number" id="sec_l" min="0">
+</div>
+</fieldset>
+</form>
+<canvas id="canvas" width="640" height="480"></canvas>
+</main>
+</body>
+</html>
