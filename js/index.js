@@ -1,6 +1,6 @@
 'use strict';
 
-const ctx = window.canvas.getContext('2d');
+const ctx = canvas.getContext('2d');
 
 function update()
 {
@@ -14,6 +14,10 @@ function update()
 	weight.min = +min_m.value;
 	weight.hour = +hour_m.value;
 	weight.all = weight.sec + weight.min + weight.hour;
+
+	const hook = { };
+	hook.x = +hook_x.value;
+	hook.y = +hook_y.value;
 
 	const now = new Date();
 	const clock = { };
@@ -42,20 +46,21 @@ function update()
 
 	edge.all = {
 		x: (weight.sec * edge.sec.x + weight.min * edge.min.x + weight.hour * edge.hour.x)
-			/ (weight.sec + weight.min + weight.hour),
+			/ (weight.sec + weight.min + weight.hour) / 2,
 		y: (weight.sec * edge.sec.y + weight.min * edge.min.y + weight.hour * edge.hour.y)
-			/ (weight.sec + weight.min + weight.hour),
+			/ (weight.sec + weight.min + weight.hour) / 2,
 	};
-	theta.all = Math.atan2(-edge.all.y, edge.all.x) + Math.PI / 2;
+	theta.all = Math.atan2(-hook.y - edge.all.y, -hook.x + edge.all.x) + Math.PI / 2;
 
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	ctx.save();
 
 	// 描画系の変形
-	ctx.setTransform(1, 0, 0, 1, ctx.canvas.width / 2, ctx.canvas.height / 2);
+	ctx.transform(1, 0, 0, 1, +ctx.canvas.width / 2 + hook.x, ctx.canvas.height / 2 - hook.y);
 	ctx.transform(Math.cos(theta.all), Math.sin(theta.all),
 		-Math.sin(theta.all), Math.cos(theta.all),
 		0, 0);
+	ctx.transform(1, 0, 0, 1, -hook.x, hook.y);
 
 	// 時計の枠
 	const clockRadius = 200;
@@ -74,6 +79,14 @@ function update()
 		const th = (i - 3) * Math.PI / 6;
 		ctx.fillText(`${i}`, clockRadius * Math.cos(th), clockRadius * Math.sin(th));
 	}
+	ctx.restore();
+
+	// 吊り下げ位置
+	ctx.save();
+	ctx.fillStyle = 'green';
+	ctx.beginPath();
+	ctx.ellipse(hook.x, -hook.y, 5, 5, 0, 0, 2 * Math.PI);
+	ctx.fill();
 	ctx.restore();
 
 	// 時計の針
