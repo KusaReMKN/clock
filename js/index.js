@@ -4,56 +4,121 @@ const ctx = window.canvas.getContext('2d');
 
 function update()
 {
+	const length = { };
+	length.sec = +sec_l.value;
+	length.min = +min_l.value;
+	length.hour = +hour_l.value;
+
+	const weight = { };
+	weight.sec = +sec_m.value;
+	weight.min = +min_m.value;
+	weight.hour = +hour_m.value;
+	weight.all = weight.sec + weight.min + weight.hour;
+
 	const now = new Date();
-	const sec = now.getSeconds() + now.getMilliseconds() / 1000;
-	const min = now.getMinutes() + sec / 60;
-	const hour = (now.getHours() + min / 60) % 12;
+	const clock = { };
+	clock.sec = now.getSeconds() + now.getMilliseconds() / 1e3;
+	clock.min = now.getMinutes() + clock.sec / 60;
+	clock.hour = now.getHours() % 12 + clock.min / 60;
 
-	const center = { x: ctx.canvas.width / 2, y: ctx.canvas.height / 2 };
+	const theta = { };
+	theta.sec = (clock.sec + 15) * Math.PI / 30;
+	theta.min = (clock.min + 15) * Math.PI / 30;
+	theta.hour = (clock.hour + 3) * Math.PI / 6;
 
-	const secth = (sec + 15) * Math.PI / 30;
-	const minth = (min + 15) * Math.PI / 30;
-	const hourth = (hour + 3) * Math.PI / 6;
-
-	const sece = { x: -sec_l.value * Math.cos(secth), y: -sec_l.value * Math.sin(secth) };
-	const mine = { x: -min_l.value * Math.cos(minth), y: -min_l.value * Math.sin(minth) };
-	const houre = { x: -hour_l.value * Math.cos(hourth), y: -hour_l.value * Math.sin(hourth) };
-	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	ctx.lineCap = 'round';
-	ctx.lineWidth = 10;
-	ctx.strokeStyle = 'black';
-	ctx.beginPath();
-	ctx.moveTo(center.x, center.y);
-	ctx.lineTo(center.x + sece.x, center.y + sece.y);
-	ctx.moveTo(center.x, center.y);
-	ctx.lineTo(center.x + mine.x, center.y + mine.y);
-	ctx.moveTo(center.x, center.y);
-	ctx.lineTo(center.x + houre.x, center.y + houre.y);
-	ctx.stroke();
-
-	const secp = { x: +sec_m.value * sece.x / 2, y: +sec_m.value * sece.y / 2 };
-	const minp = { x: +min_m.value * mine.x / 2, y: +min_m.value * mine.y / 2 };
-	const hourp = { x: +hour_m.value * houre.x / 2, y: +hour_m.value * houre.y / 2 };
-	const allp = {
-		x: (secp.x + minp.x + hourp.x) / (+sec_m.value + +min_m.value + +hour_m.value),
-		y: (secp.y + minp.y + hourp.y) / (+sec_m.value + +min_m.value + +hour_m.value),
+	const edge = { };
+	edge.sec = {
+		x: length.sec * -Math.cos(theta.sec),
+		y: length.sec * -Math.sin(theta.sec),
 	};
-	ctx.lineCap = 'round';
+	edge.min = {
+		x: length.min * -Math.cos(theta.min),
+		y: length.min * -Math.sin(theta.min),
+	};
+	edge.hour = {
+		x: length.hour * -Math.cos(theta.hour),
+		y: length.hour * -Math.sin(theta.hour),
+	};
+
+	edge.all = {
+		x: (weight.sec * edge.sec.x + weight.min * edge.min.x + weight.hour * edge.hour.x)
+			/ (weight.sec + weight.min + weight.hour),
+		y: (weight.sec * edge.sec.y + weight.min * edge.min.y + weight.hour * edge.hour.y)
+			/ (weight.sec + weight.min + weight.hour),
+	};
+	theta.all = Math.atan2(-edge.all.y, edge.all.x) + Math.PI / 2;
+
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	ctx.save();
+
+	// 描画系の変形
+	ctx.setTransform(1, 0, 0, 1, ctx.canvas.width / 2, ctx.canvas.height / 2);
+	ctx.transform(Math.cos(theta.all), Math.sin(theta.all),
+		-Math.sin(theta.all), Math.cos(theta.all),
+		0, 0);
+
+	// 時計の枠
+	const clockRadius = 200;
+	ctx.save();
+	ctx.strokeStyle = 'cyan';
 	ctx.lineWidth = 10;
-	ctx.strokeStyle = 'red';
 	ctx.beginPath();
-	ctx.moveTo(center.x + secp.x, center.y + secp.y);
-	ctx.lineTo(center.x + secp.x, center.y + secp.y);
-	ctx.moveTo(center.x + minp.x, center.y + minp.y);
-	ctx.lineTo(center.x + minp.x, center.y + minp.y);
-	ctx.moveTo(center.x + hourp.x, center.y + hourp.y);
-	ctx.lineTo(center.x + hourp.x, center.y + hourp.y);
+	ctx.ellipse(0, 0, clockRadius, clockRadius, 0, 0, 2 * Math.PI);
 	ctx.stroke();
-	ctx.strokeStyle = `hsl(${secth * 18000 / Math.PI}deg 100% 50%)`;
+
+	ctx.fillStyle = 'blue';
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
+	ctx.font = 'bold 24px sans-serif';
+	for (let i = 1; i <= 12; i++) {
+		const th = (i - 3) * Math.PI / 6;
+		ctx.fillText(`${i}`, clockRadius * Math.cos(th), clockRadius * Math.sin(th));
+	}
+	ctx.restore();
+
+	// 時計の針
+	ctx.save();
+	ctx.lineWidth = 10;
+	ctx.lineCap = 'round';
 	ctx.beginPath();
-	ctx.moveTo(center.x + allp.x, center.y + allp.y);
-	ctx.lineTo(center.x + allp.x, center.y + allp.y);
+	ctx.moveTo(0, 0);
+	ctx.lineTo(edge.hour.x, edge.hour.y);
+	ctx.moveTo(0, 0);
+	ctx.lineTo(edge.min.x, edge.min.y);
+	ctx.moveTo(0, 0);
+	ctx.lineTo(edge.sec.x, edge.sec.y);
 	ctx.stroke();
+	ctx.restore();
+
+	// 針の重さ
+	ctx.save();
+	ctx.fillStyle = 'red';
+	ctx.beginPath();
+	ctx.ellipse(edge.hour.x, edge.hour.y, Math.sqrt(weight.hour), Math.sqrt(weight.hour),
+		0, 0, 2 * Math.PI);
+	ctx.fill();
+	ctx.beginPath();
+	ctx.ellipse(edge.min.x, edge.min.y, Math.sqrt(weight.min), Math.sqrt(weight.min),
+		0, 0, 2 * Math.PI);
+	ctx.fill();
+	ctx.beginPath();
+	ctx.ellipse(edge.sec.x, edge.sec.y, Math.sqrt(weight.sec), Math.sqrt(weight.sec),
+		0, 0, 2 * Math.PI);
+	ctx.fill();
+	ctx.restore();
+
+	// 全体の重心
+	ctx.save();
+	ctx.fillStyle = 'yellow';
+	ctx.strokeStyle = `hsl(${now.getMilliseconds()%360}deg 100% 50%)`;
+	ctx.beginPath();
+	ctx.ellipse(edge.all.x, edge.all.y, Math.sqrt(weight.all), Math.sqrt(weight.all),
+		0, 0, 2 * Math.PI);
+	ctx.fill();
+	ctx.stroke();
+	ctx.restore();
+
+	ctx.restore();
 
 	window.requestAnimationFrame(update);
 }
